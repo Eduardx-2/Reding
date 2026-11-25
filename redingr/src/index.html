@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Planificador de red de cableado</title>
+  <style>
+:root {
+  color-scheme: dark;
+  --bg: #0b171d;
+  --top: #0d2026;
+  --panel: #14272f;
+  --panel-deep: #102229;
+  --panel-raised: #1a3139;
+  --line: #2a444c;
+  --line-soft: #203941;
+  --text: #e8f3f3;
+  --muted: #9bb4b9;
+  --muted-strong: #bed0d3;
+  --teal: #45d2bd;
+  --teal-deep: #0e7772;
+  --teal-fill: #143f40;
+  --amber: #efb15c;
+  --amber-fill: #453525;
+  --discard: #82979d;
+  --pending: #617b82;
+  --disabled: #6d858b;
+  --shadow: 0 18px 45px #00000024;
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
+  --bg: #edf3f4;
+  --top: #102d33;
+  --panel: #ffffff;
+  --panel-deep: #f5f9f9;
+  --panel-raised: #e8f0f0;
+  --line: #d2e0e3;
+  --line-soft: #dce8e9;
+  --text: #143039;
+  --muted: #58727c;
+  --muted-strong: #344f59;
+  --teal: #087f78;
+  --teal-deep: #087f78;
+  --teal-fill: #d8f2ea;
+  --amber: #a65e09;
+  --amber-fill: #fff0d5;
+  --discard: #70868c;
+  --pending: #a5b8bd;
+  --disabled: #9baeb3;
+  --shadow: 0 14px 32px #25465012;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 940px; background: var(--bg); color: var(--text); font: 15px/1.45 Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+button, input, select { font: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+button:focus-visible, input:focus-visible, select:focus-visible, .node-circle:focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
+svg { display: block; }
+.app-shell { min-height: 100vh; }
+.topbar { height: 72px; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 0 32px; background: var(--top); border-bottom: 1px solid #38545a; }
+.brand { display: flex; align-items: center; gap: 13px; flex: 0 0 auto; color: #edf8f6; }
+.brand-mark { width: 36px; height: 36px; display: grid; place-items: center; border: 1px solid #438b85; border-radius: 11px; background: #17514e; color: #bff8e9; }
+.brand-mark svg { width: 25px; height: 25px; }
+.brand-name { font-size: 17px; font-weight: 750; letter-spacing: .005em; white-space: nowrap; }
+.top-actions { display: flex; align-items: center; gap: 9px; }
+.top-button, .theme-button { height: 38px; border: 1px solid #416269; border-radius: 9px; background: #18343b; color: #d8ebe9; font-size: 13px; font-weight: 650; padding: 0 13px; white-space: nowrap; }
+.top-button:hover, .theme-button:hover { background: #235058; }
+.top-button.primary { border-color: #42cbb7; background: #168e82; color: white; }
+.top-button.primary:hover { background: #1ca597; }
+.top-button svg { width: 15px; height: 15px; display: inline-block; margin-right: 6px; vertical-align: -3px; }
+.theme-switch { display: flex; gap: 3px; margin-left: 9px; padding: 3px; background: #08191d; border: 1px solid #38565d; border-radius: 10px; }
+.theme-button { width: 34px; height: 30px; padding: 0; border: none; background: transparent; display: grid; place-items: center; color: #8eaaae; }
+.theme-button.active { background: #31535a; color: #f0f9f6; }
+.theme-button svg { width: 17px; height: 17px; }
+.workspace { padding: 24px 32px 28px; max-width: 1900px; margin: auto; }
+.heading-row { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 18px; }
+.eyebrow { margin: 0 0 3px; color: var(--teal); font-size: 10px; letter-spacing: .19em; font-weight: 800; text-transform: uppercase; }
+.network-title { margin: 0; font-size: clamp(26px, 2.35vw, 34px); line-height: 1.15; font-weight: 760; letter-spacing: -.035em; }
+.network-meta { color: var(--muted); margin: 5px 0 0; font-size: 13px; }
+.run-state { align-self: center; display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--panel); border-radius: 999px; color: var(--muted-strong); padding: 8px 13px; font-size: 11px; text-transform: uppercase; letter-spacing: .09em; font-weight: 800; white-space: nowrap; }
+.run-state::before { content: ""; width: 7px; height: 7px; background: var(--pending); border-radius: 50%; }
+.run-state.in-progress::before { background: var(--amber); }
+.run-state.complete::before { background: var(--teal); }
+.run-state.disconnected::before { background: var(--amber); }
+.metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; margin-bottom: 16px; }
+.metric { min-height: 122px; padding: 17px 20px 15px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
+.metric-head { font-size: 11px; letter-spacing: .11em; text-transform: uppercase; color: var(--muted-strong); font-weight: 800; }
+.metric-main { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 10px; }
+.metric-value { font-size: 31px; line-height: 1.04; letter-spacing: -.04em; font-weight: 760; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.metric-value.accent { color: var(--teal); }
+.metric-note { margin: 7px 0 0; color: var(--muted); font-size: 12px; }
+.progress { width: min(45%, 175px); height: 9px; overflow: hidden; border-radius: 999px; background: var(--line); }
+.progress > span { display: block; height: 100%; width: 0; border-radius: inherit; background: var(--teal); transition: width .2s ease; }
+.main-grid { display: grid; grid-template-columns: minmax(0, 1.62fr) minmax(395px, 1fr); gap: 16px; }
+.panel { min-width: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 15px; box-shadow: var(--shadow); }
+.graph-panel { padding: 19px 19px 15px; }
+.panel-title-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 13px; }
+.panel-title { margin: 0; font-size: 17px; font-weight: 750; letter-spacing: -.01em; }
+.panel-subtitle { margin: 2px 0 0; color: var(--muted); font-size: 12px; }
+.quiet-tag { color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 5px 10px; font-size: 10px; letter-spacing: .08em; font-weight: 800; text-transform: uppercase; white-space: nowrap; }
+.graph-surface { height: clamp(360px, 36vw, 510px); min-height: 360px; background-color: var(--panel-deep); background-image: radial-gradient(var(--line) .85px, transparent .85px); background-size: 22px 22px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.graph-surface svg { width: 100%; height: 100%; }
+.edge { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.edge.pending { stroke: var(--pending); stroke-width: 2.2; opacity: .6; }
+.edge.evaluation { stroke: var(--amber); stroke-width: 5; }
+.edge.chosen { stroke: var(--teal); stroke-width: 5; }
+.edge.discarded { stroke: var(--discard); stroke-width: 2.8; stroke-dasharray: 7 8; opacity: .9; }
+.edge-label rect { fill: var(--panel); stroke: var(--line); stroke-width: 1.4; }
+.edge-label text { font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; fill: var(--muted-strong); text-anchor: middle; dominant-baseline: middle; }
+.edge-label.chosen rect { stroke: var(--teal); }
+.edge-label.chosen text { fill: var(--teal); }
+.edge-label.evaluation rect { stroke: var(--amber); fill: var(--amber-fill); }
+.edge-label.evaluation text { fill: var(--amber); }
+.edge-label.discarded rect { stroke: var(--discard); }
+.node-circle { fill: var(--panel); stroke: var(--teal); stroke-width: 2.5; }
+.node-letter { fill: var(--text); font-size: 24px; font-weight: 850; text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
+.node-name-box { fill: var(--panel-raised); stroke: var(--line); stroke-width: 1; }
+.node-name { fill: var(--muted-strong); font-size: 13px; font-weight: 700; text-anchor: middle; dominant-baseline: middle; }
+.legend { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; padding: 15px 3px 0; color: var(--muted-strong); font-size: 11px; font-weight: 700; }
+.legend-item { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.legend-line { display: inline-block; width: 28px; height: 0; border-top: 3px solid; border-radius: 4px; }
+.legend-line.chosen { border-color: var(--teal); }
+.legend-line.evaluation { border-color: var(--amber); }
+.legend-line.discarded { border-color: var(--discard); border-top-style: dashed; }
+.legend-line.pending { border-color: var(--pending); }
+.table-panel { padding: 19px 15px 14px; display: flex; flex-direction: column; }
+.table-panel .panel-title-row { padding: 0 5px; }
+.table-wrap { flex: 1; overflow: auto; }
+.trace-table { width: 100%; border-collapse: separate; border-spacing: 0 2px; font-size: 12px; }
+.trace-table th { height: 32px; color: var(--muted); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; text-align: left; background: var(--panel-raised); font-weight: 800; white-space: nowrap; }
+.trace-table th:first-child { padding-left: 13px; border-radius: 7px 0 0 7px; }
+.trace-table th:last-child { border-radius: 0 7px 7px 0; }
+.trace-table td { height: 43px; border-bottom: 1px solid var(--line-soft); font-weight: 650; white-space: nowrap; }
+.trace-table td:first-child { padding-left: 13px; }
+.trace-table tbody tr:nth-child(even):not(.row-evaluation) { background: #ffffff06; }
+html[data-theme="light"] .trace-table tbody tr:nth-child(even):not(.row-evaluation) { background: #0a424405; }
+.trace-table tbody tr.row-evaluation { background: var(--amber-fill); }
+.trace-table tbody tr.row-evaluation td:first-child { border-radius: 7px 0 0 7px; }
+.trace-table tbody tr.row-evaluation td:last-child { border-radius: 0 7px 7px 0; }
+.trace-table td.length { font-variant-numeric: tabular-nums; }
+.status-pill { display: inline-block; border-radius: 999px; padding: 4px 8px; font-size: 10px; font-weight: 750; }
+.status-pill.chosen { color: var(--teal); background: var(--teal-fill); }
+.status-pill.evaluation { color: var(--amber); background: #a66d1d24; }
+.status-pill.discarded { color: var(--muted-strong); background: var(--panel-raised); }
+.status-pill.pending { color: var(--muted); background: var(--panel-raised); }
+.table-foot { min-height: 33px; padding: 10px 5px 0; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; }
+.step-panel { display: flex; align-items: center; gap: 14px; margin-top: 16px; padding: 13px 15px; border: 1px solid var(--line); border-radius: 14px; background: var(--panel); box-shadow: var(--shadow); }
+.step-number { width: 48px; height: 48px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 10px; color: var(--teal); background: var(--teal-fill); font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.step-copy { min-width: 0; flex: 1; }
+.step-copy strong { display: block; font-size: 14px; font-weight: 760; }
+.step-copy p { margin: 2px 0 0; color: var(--muted); font-size: 12px; }
+.step-actions { display: flex; gap: 8px; flex: 0 0 auto; }
+.action-button { min-width: 92px; height: 38px; padding: 0 13px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel-raised); color: var(--text); font-size: 12px; font-weight: 750; }
+.action-button:hover:not(:disabled) { border-color: var(--teal); }
+.action-button.primary { min-width: 112px; background: var(--teal-deep); border-color: var(--teal); color: white; }
+.action-button.primary:hover:not(:disabled) { background: #16988d; }
+.action-button:disabled { color: var(--disabled); background: var(--panel-deep); opacity: .66; }
+.footer-note { margin-top: 10px; display: flex; justify-content: space-between; color: var(--muted); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; font-weight: 800; }
+.editor-overlay { position: fixed; inset: 72px 0 0; z-index: 10; display: flex; justify-content: flex-end; background: #021116aa; }
+.editor-overlay[hidden] { display: none; }
+.editor-drawer { width: min(540px, 100vw); height: 100%; overflow-y: auto; background: var(--panel); border-left: 1px solid var(--line); box-shadow: -20px 0 50px #0005; padding: 22px 24px 28px; }
+.editor-top { display: flex; justify-content: space-between; align-items: start; gap: 12px; }
+.editor-top h2 { margin: 0; font-size: 21px; }
+.editor-top p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+.icon-close { width: 32px; height: 32px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-raised); color: var(--text); font-size: 20px; line-height: 1; }
+.editor-section { margin-top: 20px; border-top: 1px solid var(--line); padding-top: 17px; }
+.editor-section h3 { margin: 0 0 10px; font-size: 14px; }
+.field-label { display: block; margin-bottom: 6px; color: var(--muted-strong); font-size: 12px; font-weight: 700; }
+.field-input { width: 100%; height: 36px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel-deep); color: var(--text); padding: 0 10px; }
+.editor-list { display: grid; gap: 7px; }
+.editor-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; border: 1px solid var(--line); border-radius: 8px; padding: 7px; background: var(--panel-deep); }
+.editor-row.edge-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 75px auto; }
+.editor-row .field-input { height: 32px; }
+.editor-row .node-id { font-size: 13px; font-weight: 750; padding-left: 6px; }
+.tiny-button { height: 30px; padding: 0 9px; background: var(--panel-raised); color: var(--text); border: 1px solid var(--line); border-radius: 7px; font-size: 11px; font-weight: 700; }
+.tiny-button:hover { border-color: var(--teal); }
+.tiny-button.remove { color: #f2ad9b; font-size: 16px; width: 30px; padding: 0; }
+.editor-add { margin-top: 9px; }
+.editor-error { min-height: 19px; margin: 13px 0 0; color: #f3aa95; font-size: 12px; }
+.editor-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+@media (max-width: 1100px) {
+  .topbar { padding: 0 20px; }
+  .brand-name { font-size: 15px; }
+  .top-button { font-size: 11px; padding: 0 8px; }
+  .workspace { padding: 22px 20px; }
+  .main-grid { grid-template-columns: minmax(0, 1.5fr) minmax(360px, 1fr); gap: 11px; }
+  .graph-panel { padding: 15px; }
+  .table-panel { padding: 15px 10px; }
+}
+
+  </style>
+</head>
+<body data-initial-step="0">
+  <div id="app"></div>
+  <script>
+(() => {
+  "use strict";
+
+  const example = {
+    name: "Red de la oficina",
+    nodes: [
+      { id: "A", label: "Nodo A", x: 150, y: 105 },
+      { id: "B", label: "Nodo B", x: 500, y: 105 },
+      { id: "C", label: "Nodo C", x: 290, y: 370 },
+      { id: "D", label: "Nodo D", x: 800, y: 190 },
+      { id: "E", label: "Nodo E", x: 620, y: 400 }
+    ],
+    edges: [
+      { source: "D", target: "E", length: 10 },
+      { source: "A", target: "C", length: 20 },
+      { source: "B", target: "D", length: 30 },
+      { source: "A", target: "B", length: 40 },
+      { source: "B", target: "C", length: 50 },
+      { source: "C", target: "E", length: 60 },
+      { source: "C", target: "D", length: 70 },
+      { source: "B", target: "E", length: 80 }
+    ]
+  };
+
+  const icons = {
+    load: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4"/><path d="M4 17v3h16v-3"/></svg>',
+    edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 5 4 4M4 20l4.5-1 11-11a2.8 2.8 0 0 0-4-4l-11 11L4 20Z"/></svg>',
+    play: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 5 11 7-11 7V5Z"/></svg>',
+    sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>',
+    moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M20.5 14.5A8.7 8.7 0 0 1 9.5 3.5 8.8 8.8 0 1 0 20.5 14.5Z"/></svg>',
+    logo: '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 5 5 25h22L16 5Z"/><circle cx="16" cy="5" r="2.6" fill="currentColor" stroke="none"/><circle cx="5" cy="25" r="2.6" fill="currentColor" stroke="none"/><circle cx="27" cy="25" r="2.6" fill="currentColor" stroke="none"/></svg>'
+  };
+
+  const app = document.getElementById("app");
+  let network = structuredClone(example);
+  const queryStep = new URLSearchParams(window.location.search).get("paso");
+  const initialStep = queryStep === null ? Number(document.body.dataset.initialStep) || 0 : Number(queryStep) || 0;
+  let step = Math.max(0, Math.min(initialStep, example.edges.length));
+  let calculationStarted = step > 0;
+  let editorOpen = false;
+  let draft = null;
+  let editorError = "";
+  let notice = "";
+  let theme = "dark";
+
+  const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+  const formatNumber = value => new Intl.NumberFormat("es-CR", { maximumFractionDigits: 2 }).format(value);
+  const safeId = value => String(value).replace(/[^a-zA-Z0-9_-]/g, "-");
+  const edgeName = edge => `${edge.source}–${edge.target}`;
+  const isExampleNetwork = () => network.name === example.name && network.nodes.length === example.nodes.length && network.edges.length === example.edges.length && network.edges.every((edge, index) => edge.source === example.edges[index].source && edge.target === example.edges[index].target && edge.length === example.edges[index].length);
+
+  function normalizeNetwork(raw) {
+    if (!raw || typeof raw !== "object" || !Array.isArray(raw.nodes) || !Array.isArray(raw.edges)) {
+      throw new Error("El JSON debe incluir las listas «nodes» y «edges».");
+    }
+    if (raw.nodes.length < 1) throw new Error("Agregá al menos un nodo.");
+    const nodes = raw.nodes.map((item, index) => {
+      const node = typeof item === "string" ? { id: item } : item;
+      const id = String(node?.id ?? "").trim();
+      if (!id) throw new Error(`El nodo ${index + 1} necesita un identificador.`);
+      const angle = -Math.PI / 2 + index * 2 * Math.PI / raw.nodes.length;
+      const x = Number.isFinite(Number(node.x)) ? Number(node.x) : 500 + 330 * Math.cos(angle);
+      const y = Number.isFinite(Number(node.y)) ? Number(node.y) : 245 + 155 * Math.sin(angle);
+      return { id, label: String(node.label || `Nodo ${id}`).trim(), x: Math.max(55, Math.min(945, x)), y: Math.max(55, Math.min(410, y)) };
+    });
+    const ids = new Set(nodes.map(node => node.id));
+    if (ids.size !== nodes.length) throw new Error("Cada nodo debe tener un identificador único.");
+    const edges = raw.edges.map((item, index) => {
+      const source = String(item?.source ?? "").trim();
+      const target = String(item?.target ?? "").trim();
+      const length = Number(item?.length);
+      if (!ids.has(source) || !ids.has(target)) throw new Error(`El trazado ${index + 1} apunta a un nodo inexistente.`);
+      if (source === target) throw new Error(`El trazado ${index + 1} debe unir dos nodos distintos.`);
+      if (!Number.isFinite(length) || length <= 0) throw new Error(`El trazado ${index + 1} necesita una longitud mayor que cero.`);
+      return { source, target, length };
+    });
+    return { name: String(raw.name ?? "").trim(), nodes, edges };
+  }
+
+  function analyze() {
+    const sorted = network.edges.map((edge, index) => ({ ...edge, originalIndex: index }))
+      .sort((a, b) => a.length - b.length || a.originalIndex - b.originalIndex);
+    const parent = new Map(network.nodes.map(node => [node.id, node.id]));
+    const rank = new Map(network.nodes.map(node => [node.id, 0]));
+    const find = id => {
+      if (parent.get(id) !== id) parent.set(id, find(parent.get(id)));
+      return parent.get(id);
+    };
+    let total = 0;
+    let chosen = 0;
+    let completionStep = network.nodes.length === 1 ? 0 : null;
+    const decisions = sorted.map((edge, index) => {
+      let a = find(edge.source);
+      let b = find(edge.target);
+      let selected = false;
+      if (a !== b) {
+        if (rank.get(a) < rank.get(b)) [a, b] = [b, a];
+        parent.set(b, a);
+        if (rank.get(a) === rank.get(b)) rank.set(a, rank.get(a) + 1);
+        total += edge.length;
+        chosen += 1;
+        selected = true;
+        if (chosen === network.nodes.length - 1 && completionStep === null) completionStep = index + 1;
+      }
+      return { ...edge, selected };
+    });
+    return { decisions, completionStep, allLength: sorted.reduce((sum, edge) => sum + edge.length, 0), finalLength: total };
+  }
+
+  function currentState(result) {
+    const processed = result.decisions.slice(0, step);
+    const chosen = processed.filter(edge => edge.selected);
+    const total = chosen.reduce((sum, edge) => sum + edge.length, 0);
+    const target = Math.max(0, network.nodes.length - 1);
+    const connected = chosen.length === target;
+    const exhausted = step === result.decisions.length;
+    const status = step === 0 && target > 0 && !calculationStarted ? "ready" : connected ? "complete" : exhausted ? "disconnected" : "in-progress";
+    return { chosenCount: chosen.length, total, target, connected, exhausted, status };
+  }
+
+  function edgeStatus(edge, index) {
+    if (index < step) return edge.selected ? "chosen" : "discarded";
+    if (step > 0 && index === step) return "evaluation";
+    return "pending";
+  }
+
+  function stepMessage(result, state) {
+    if (state.status === "ready") return ["Red lista para calcular", "La red está cargada. Calculá la red mínima para comenzar"];
+    if (step === 0 && state.target === 0) return ["Red completa", "El único nodo no necesita trazados para quedar conectado."];
+    if (step === 3 && isExampleNetwork()) {
+      return ["B se unió al grupo de D y E", "B se unió al grupo de D y E. Ahora se evalúa A–B"];
+    }
+    if (step === 8 && result.completionStep === 4 && isExampleNetwork()) {
+      return ["Red completa · revisión final", "La red quedó completa en el paso 4. Los pasos 5 a 8 revisan los trazados restantes"];
+    }
+    if (state.status === "disconnected") return ["Red no conexa", "Se revisaron todos los trazados y aún hay nodos sin conectar."];
+    const latest = result.decisions[step - 1];
+    if (state.connected && step === result.completionStep) return ["Red completa", `La red quedó conectada en el paso ${step}. Podés revisar los trazados restantes.`];
+    if (latest && !latest.selected) return [`${edgeName(latest)} formaría un ciclo`, result.completionStep !== null && step > result.completionStep ? `La red quedó completa en el paso ${result.completionStep}. Continúa la revisión de trazados.` : "Se descartó este trazado porque conectaría nodos del mismo grupo."];
+    const next = result.decisions[step];
+    return [latest ? `${edgeName(latest)} se agregó a la red` : "Red lista", next ? `Se sumaron ${formatNumber(latest.length)} m. Ahora se evalúa ${edgeName(next)}.` : "Se revisaron todos los trazados disponibles."];
+  }
+
+  function isExampleGraph() {
+    return network.nodes.length === 5 && network.nodes.every((node, i) => node.id === example.nodes[i].id && node.x === example.nodes[i].x && node.y === example.nodes[i].y);
+  }
+
+  function edgeGeometry(edge) {
+    const from = network.nodes.find(node => node.id === edge.source);
+    const to = network.nodes.find(node => node.id === edge.target);
+    if (isExampleGraph()) {
+      const key = edgeName(edge);
+      const labels = {
+        "D–E": [720, 309], "A–C": [207, 238], "B–D": [672, 119], "A–B": [325, 102],
+        "B–C": [397, 231], "C–E": [455, 402], "C–D": [550, 281], "B–E": [937, 273]
+      };
+      if (key === "B–E") return { path: "M 500 105 C 770 -32 1002 65 945 275 C 913 410 765 465 620 400", label: labels[key] };
+      if (labels[key]) return { path: `M ${from.x} ${from.y} L ${to.x} ${to.y}`, label: labels[key] };
+    }
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    const length = Math.hypot(dx, dy) || 1;
+    const offset = Math.min(18, length / 5);
+    return {
+      path: `M ${from.x} ${from.y} L ${to.x} ${to.y}`,
+      label: [Math.max(34, Math.min(966, (from.x + to.x) / 2 - dy / length * offset)), Math.max(25, Math.min(455, (from.y + to.y) / 2 + dx / length * offset))]
+    };
+  }
+
+  function graphMarkup(result) {
+    const edges = result.decisions.map((edge, index) => ({ ...edge, status: edgeStatus(edge, index), geometry: edgeGeometry(edge) }));
+    const order = { pending: 0, discarded: 1, chosen: 2, evaluation: 3 };
+    const paths = [...edges].sort((a, b) => order[a.status] - order[b.status]).map(edge => `<path class="edge ${edge.status}" d="${edge.geometry.path}"/>`).join("");
+    const labels = edges.map(edge => {
+      const [x, y] = edge.geometry.label;
+      const text = `${formatNumber(edge.length)} m`;
+      const width = Math.max(50, text.length * 8 + 17);
+      return `<g class="edge-label ${edge.status}"><rect x="${x - width / 2}" y="${y - 17}" width="${width}" height="34" rx="8"/><text x="${x}" y="${y + 1}">${escapeHtml(text)}</text></g>`;
+    }).join("");
+    const nodes = network.nodes.map(node => {
+      const label = node.label || `Nodo ${node.id}`;
+      const width = Math.min(130, Math.max(69, label.length * 7.3 + 18));
+      const labelY = Math.min(459, node.y + 43);
+      return `<g class="node" data-node="${escapeHtml(safeId(node.id))}"><circle class="node-circle" cx="${node.x}" cy="${node.y}" r="26"/><text class="node-letter" x="${node.x}" y="${node.y + 2}">${escapeHtml(node.id)}</text><rect class="node-name-box" x="${node.x - width / 2}" y="${labelY - 12}" width="${width}" height="25" rx="10"/><text class="node-name" x="${node.x}" y="${labelY + 1}">${escapeHtml(label)}</text></g>`;
+    }).join("");
+    return `<svg viewBox="0 0 1000 480" role="img" aria-label="Grafo de ${network.nodes.length} nodos y ${network.edges.length} trazados">${paths}${labels}${nodes}</svg>`;
+  }
+
+  function editorMarkup() {
+    if (!editorOpen || !draft) return '<div class="editor-overlay" hidden></div>';
+    const nodeOptions = draft.nodes.map(node => `<option value="${escapeHtml(node.id)}">${escapeHtml(node.id)}</option>`).join("");
+    const nodes = draft.nodes.map((node, index) => `<div class="editor-row"><span class="node-id">${escapeHtml(node.id)}</span><div style="display:flex;gap:7px;align-items:center"><input class="field-input" data-node-label="${index}" aria-label="Nombre del nodo ${escapeHtml(node.id)}" value="${escapeHtml(node.label)}"><button class="tiny-button remove" data-remove-node="${index}" title="Quitar nodo ${escapeHtml(node.id)}" aria-label="Quitar nodo ${escapeHtml(node.id)}">×</button></div></div>`).join("");
+    const edges = draft.edges.map((edge, index) => {
+      const sourceOptions = nodeOptions.replace(`value="${escapeHtml(edge.source)}"`, `value="${escapeHtml(edge.source)}" selected`);
+      const targetOptions = nodeOptions.replace(`value="${escapeHtml(edge.target)}"`, `value="${escapeHtml(edge.target)}" selected`);
+      return `<div class="editor-row edge-row"><select class="field-input" data-edge-source="${index}" aria-label="Origen del trazado ${index + 1}">${sourceOptions}</select><select class="field-input" data-edge-target="${index}" aria-label="Destino del trazado ${index + 1}">${targetOptions}</select><input class="field-input" type="number" min="0.01" step="any" data-edge-length="${index}" aria-label="Longitud del trazado ${index + 1} en metros" value="${escapeHtml(edge.length)}"><button class="tiny-button remove" data-remove-edge="${index}" title="Quitar trazado" aria-label="Quitar trazado ${index + 1}">×</button></div>`;
+    }).join("");
+    return `<div class="editor-overlay" id="editor-overlay"><aside class="editor-drawer" role="dialog" aria-modal="true" aria-labelledby="editor-title"><div class="editor-top"><div><h2 id="editor-title">Editar red</h2><p>Actualizá los puntos y trazados de esta red.</p></div><button class="icon-close" data-action="close-editor" aria-label="Cerrar editor">×</button></div><div class="editor-section"><label class="field-label" for="edit-name">Nombre de la red</label><input id="edit-name" class="field-input" value="${escapeHtml(draft.name)}" placeholder="Red sin nombre"></div><section class="editor-section"><h3>Nodos · ${draft.nodes.length}</h3><div class="editor-list">${nodes}</div><button class="tiny-button editor-add" data-action="add-node">+ Agregar nodo</button></section><section class="editor-section"><h3>Trazados · ${draft.edges.length}</h3><div class="editor-list">${edges}</div><button class="tiny-button editor-add" data-action="add-edge" ${draft.nodes.length < 2 ? "disabled" : ""}>+ Agregar trazado</button></section><p class="editor-error" role="alert">${escapeHtml(editorError)}</p><div class="editor-actions"><button class="action-button" data-action="close-editor">Cancelar</button><button class="action-button primary" data-action="save-editor">Guardar red</button></div></aside></div>`;
+  }
+
+  function render() {
+    const result = analyze();
+    step = Math.min(step, result.decisions.length);
+    const state = currentState(result);
+    const title = network.name || "Red sin nombre";
+    const [messageTitle, messageBody] = stepMessage(result, state);
+    const statusText = { ready: "Red lista", "in-progress": "Cálculo en curso", complete: "Red completa", disconnected: "Red no conexa" }[state.status];
+    const savings = state.connected ? `${formatNumber(result.allLength - state.total)} m` : "—";
+    const savingsNote = state.connected ? `Frente a ${formatNumber(result.allLength)} m de todos los trazados posibles` : "Se muestra al completar la red";
+    const tableRows = result.decisions.map((edge, index) => {
+      const status = edgeStatus(edge, index);
+      const statusText = { chosen: "Elegido", evaluation: "En evaluación", discarded: "Formaría un ciclo", pending: "Pendiente" }[status];
+      return `<tr class="row-${status}"><td>${escapeHtml(edge.source)}</td><td>${escapeHtml(edge.target)}</td><td class="length">${formatNumber(edge.length)} m</td><td><span class="status-pill ${status}">${statusText}</span></td></tr>`;
+    }).join("");
+    const foot = state.status === "disconnected" ? "No hay suficientes trazados para conectar todos los nodos." : state.connected && result.completionStep !== null && step > result.completionStep ? `Red conectada en el paso ${result.completionStep}; los demás trazados forman ciclos.` : "Los trazados se revisan de menor a mayor longitud.";
+    document.documentElement.dataset.theme = theme;
+    app.innerHTML = `<div class="app-shell">
+      <header class="topbar"><div class="brand"><span class="brand-mark">${icons.logo}</span><span class="brand-name">Planificador de red de cableado</span></div><div class="top-actions"><button class="top-button" data-action="load">${icons.load}Cargar JSON</button><button class="top-button" data-action="open-editor">${icons.edit}Editar red</button><button class="top-button ${step === 0 ? "primary" : ""}" data-action="calculate">${icons.play}Calcular red mínima</button><div class="theme-switch" role="group" aria-label="Tema visual"><button class="theme-button ${theme === "light" ? "active" : ""}" data-action="light" aria-label="Modo claro" aria-pressed="${theme === "light"}">${icons.sun}</button><button class="theme-button ${theme === "dark" ? "active" : ""}" data-action="dark" aria-label="Modo oscuro" aria-pressed="${theme === "dark"}">${icons.moon}</button></div></div></header>
+      <main class="workspace"><div class="heading-row"><div><p class="eyebrow">Proyecto activo</p><h1 class="network-title">${escapeHtml(title)}</h1><p class="network-meta">${network.nodes.length} nodos · ${network.edges.length} trazados</p></div><div class="run-state ${state.status}">${statusText}</div></div>${notice ? `<p role="alert" style="color:#f3aa95;margin:-6px 0 12px">${escapeHtml(notice)}</p>` : ""}
+      <section class="metrics" aria-label="Indicadores de la red"><div class="metric"><div class="metric-head">Cable acumulado</div><div class="metric-main"><span class="metric-value">${formatNumber(state.total)} m</span></div><p class="metric-note">Cable elegido hasta este paso</p></div><div class="metric"><div class="metric-head">Aristas elegidas</div><div class="metric-main"><span class="metric-value">${state.chosenCount} de ${state.target}</span><span class="progress" role="progressbar" aria-label="Aristas elegidas" aria-valuenow="${state.chosenCount}" aria-valuemin="0" aria-valuemax="${state.target}"><span style="width:${state.target ? state.chosenCount / state.target * 100 : 100}%"></span></span></div><p class="metric-note">Objetivo: conectar ${network.nodes.length} nodos</p></div><div class="metric"><div class="metric-head">Ahorro de cable</div><div class="metric-main"><span class="metric-value ${state.connected ? "accent" : ""}">${savings}</span></div><p class="metric-note">${savingsNote}</p></div></section>
+      <div class="main-grid"><section class="panel graph-panel" aria-labelledby="graph-title"><div class="panel-title-row"><div><h2 class="panel-title" id="graph-title">Topología de la red</h2><p class="panel-subtitle">Cada etiqueta indica la longitud del trazado en metros.</p></div><span class="quiet-tag">Vista de red</span></div><div class="graph-surface">${graphMarkup(result)}</div><div class="legend" aria-label="Leyenda de trazados"><span class="legend-item"><i class="legend-line chosen"></i>Elegido</span><span class="legend-item"><i class="legend-line evaluation"></i>En evaluación</span><span class="legend-item"><i class="legend-line discarded"></i>Descartado</span><span class="legend-item"><i class="legend-line pending"></i>Pendiente</span></div></section>
+      <section class="panel table-panel" aria-labelledby="table-title"><div class="panel-title-row"><div><h2 class="panel-title" id="table-title">Trazados por longitud</h2><p class="panel-subtitle">Orden ascendente · ${network.edges.length} conexiones</p></div></div><div class="table-wrap"><table class="trace-table"><thead><tr><th>Origen</th><th>Destino</th><th>Longitud</th><th>Estado</th></tr></thead><tbody>${tableRows}</tbody></table></div><div class="table-foot">${foot}</div></section></div>
+      <section class="step-panel" aria-label="Control de pasos"><div class="step-number">${step}</div><div class="step-copy"><strong>${escapeHtml(messageTitle)}</strong><p>${escapeHtml(messageBody)}</p></div><div class="step-actions"><button class="action-button" data-action="reset" ${step === 0 ? "disabled" : ""}>Reiniciar</button><button class="action-button" data-action="previous" ${step === 0 ? "disabled" : ""}>← Anterior</button><button class="action-button primary" data-action="next" ${step === 0 || step === result.decisions.length ? "disabled" : ""}>Siguiente →</button></div></section><div class="footer-note"><span>Kruskal / Union-Find</span><span>Paso ${step} de ${result.decisions.length}</span></div></main>
+      <input id="json-file" class="sr-only" type="file" accept=".json,application/json">${editorMarkup()}</div>`;
+  }
+
+  function nextNodeId() {
+    const used = new Set(draft.nodes.map(node => node.id));
+    for (let code = 65; code <= 90; code++) if (!used.has(String.fromCharCode(code))) return String.fromCharCode(code);
+    let n = 1;
+    while (used.has(`N${n}`)) n++;
+    return `N${n}`;
+  }
+
+  app.addEventListener("click", event => {
+    const button = event.target.closest("button[data-action], button[data-remove-node], button[data-remove-edge]");
+    if (!button || button.disabled) return;
+    if (button.dataset.removeNode !== undefined) {
+      const index = Number(button.dataset.removeNode);
+      const id = draft.nodes[index].id;
+      draft.nodes.splice(index, 1);
+      draft.edges = draft.edges.filter(edge => edge.source !== id && edge.target !== id);
+      render();
+      return;
+    }
+    if (button.dataset.removeEdge !== undefined) {
+      draft.edges.splice(Number(button.dataset.removeEdge), 1);
+      render();
+      return;
+    }
+    switch (button.dataset.action) {
+      case "load": document.getElementById("json-file").click(); break;
+      case "open-editor": editorOpen = true; draft = structuredClone(network); editorError = ""; render(); document.getElementById("edit-name")?.focus(); break;
+      case "close-editor": editorOpen = false; draft = null; render(); break;
+      case "add-node": {
+        const id = nextNodeId();
+        const angle = -Math.PI / 2 + draft.nodes.length * 2.4;
+        draft.nodes.push({ id, label: `Nodo ${id}`, x: Math.round(500 + 280 * Math.cos(angle)), y: Math.round(245 + 135 * Math.sin(angle)) });
+        render();
+        break;
+      }
+      case "add-edge": draft.edges.push({ source: draft.nodes[0].id, target: draft.nodes[1].id, length: 10 }); render(); break;
+      case "save-editor": {
+        try { network = normalizeNetwork(draft); step = 0; calculationStarted = false; editorOpen = false; draft = null; editorError = ""; notice = ""; render(); }
+        catch (error) { editorError = error.message; render(); }
+        break;
+      }
+      case "calculate": calculationStarted = true; step = Math.min(1, network.edges.length); notice = ""; render(); break;
+      case "reset": calculationStarted = false; step = 0; render(); break;
+      case "previous": step = Math.max(0, step - 1); if (step === 0) calculationStarted = false; render(); break;
+      case "next": step = Math.min(network.edges.length, step + 1); render(); break;
+      case "light": theme = "light"; render(); break;
+      case "dark": theme = "dark"; render(); break;
+    }
+  });
+
+  app.addEventListener("input", event => {
+    if (!editorOpen || !draft) return;
+    const input = event.target;
+    if (input.id === "edit-name") draft.name = input.value;
+    if (input.dataset.nodeLabel !== undefined) draft.nodes[Number(input.dataset.nodeLabel)].label = input.value;
+    if (input.dataset.edgeLength !== undefined) draft.edges[Number(input.dataset.edgeLength)].length = input.value;
+  });
+
+  app.addEventListener("change", async event => {
+    const input = event.target;
+    if (input.id === "json-file") {
+      const file = input.files?.[0];
+      if (!file) return;
+      try { network = normalizeNetwork(JSON.parse(await file.text())); step = 0; calculationStarted = false; notice = ""; render(); }
+      catch (error) { notice = `No se pudo cargar la red: ${error.message}`; render(); }
+      return;
+    }
+    if (!editorOpen || !draft) return;
+    if (input.dataset.edgeSource !== undefined) draft.edges[Number(input.dataset.edgeSource)].source = input.value;
+    if (input.dataset.edgeTarget !== undefined) draft.edges[Number(input.dataset.edgeTarget)].target = input.value;
+  });
+
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && editorOpen) { editorOpen = false; draft = null; render(); }
+  });
+
+  render();
+})();
+
+  </script>
+</body>
+</html>
