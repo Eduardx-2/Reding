@@ -1,0 +1,20 @@
+{
+  "nombre": "Red del centro educativo",
+  "nodos": [
+    { "id": "A", "nombre": "Entrada principal", "x": 100, "y": 100 },
+    { "id": "B", "nombre": "Biblioteca", "x": 350, "y": 80 },
+    { "id": "C", "nombre": "Laboratorio", "x": 200, "y": 250 },
+    { "id": "D", "nombre": "Cafetería", "x": 450, "y": 250 },
+    { "id": "E", "nombre": "Aula 1", "x": 100, "y": 400 }
+  ],
+  "aristas": [
+    { "id": "AB", "origen": "A", "destino": "B", "peso_m": 15 },
+    { "id": "AC", "origen": "A", "destino": "C", "peso_m": 25 },
+    { "id": "AE", "origen": "A", "destino": "E", "peso_m": 35 },
+    { "id": "BC", "origen": "B", "destino": "C", "peso_m": 20 },
+    { "id": "BD", "origen": "B", "destino": "D", "peso_m": 40 },
+    { "id": "CD", "origen": "C", "destino": "D", "peso_m": 12 },
+    { "id": "CE", "origen": "C", "destino": "E", "peso_m": 18 },
+    { "id": "DE", "origen": "D", "destino": "E", "peso_m": 30 }
+  ]
+}

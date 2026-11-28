@@ -1,0 +1,13 @@
+{
+  "nombre": "Red de la oficina",
+  "nodos": [
+    { "id": "A", "nombre": "Recepción", "x": 100, "y": 80 },
+    { "id": "B", "nombre": "Oficina", "x": 300, "y": 80 },
+    { "id": "C", "nombre": "Bodega", "x": 200, "y": 240 }
+  ],
+  "aristas": [
+    { "id": "AB", "origen": "A", "destino": "B", "peso_m": 10 },
+    { "id": "AC", "origen": "A", "destino": "C", "peso_m": 20 },
+    { "id": "BC", "origen": "B", "destino": "C", "peso_m": 30 }
+  ]
+}
